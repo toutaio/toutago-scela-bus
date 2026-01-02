@@ -13,14 +13,13 @@
 - ⚡ **Sync & Async** - Choose between synchronous or asynchronous message delivery
 - 🎯 **Pattern Matching** - Subscribe with wildcards (`user.*`, `*.created`)
 - 🔗 **Middleware Pipeline** - Intercept messages for logging, metrics, validation
-- 🔄 **Retry Logic** - Configurable retry with exponential backoff
+- 🔄 **Retry Logic** - Configurable retry logic for failed messages
 - 💀 **Dead Letter Queue** - Handle failed messages gracefully
 - 🧵 **Thread-Safe** - Fully concurrent, safe for goroutines
 - 🎛️ **Context Support** - Cancellation, timeouts, request-scoped data
 - 📊 **Observable** - Hooks for metrics and monitoring
-- 🎪 **Priority Queues** - Process high-priority messages first
 - 🚀 **Zero Dependencies** - Only standard library
-- ✅ **Production Ready** - 80%+ test coverage, comprehensive CI/CD
+- ✅ **Production Ready** - 92.8% test coverage, comprehensive CI/CD
 
 ## Installation
 
@@ -107,21 +106,34 @@ loggingMiddleware := func(next scela.Handler) scela.Handler {
 bus.Use(loggingMiddleware)
 ```
 
-### Priority Messages
-
-```go
-bus.PublishWithPriority(ctx, "urgent.alert", payload, scela.PriorityHigh)
-```
-
 ### Dead Letter Queue
 
 ```go
-bus, err := scela.New(
+bus := scela.New(
     scela.WithMaxRetries(3),
-    scela.WithDeadLetterHandler(func(ctx context.Context, msg scela.Message, err error) {
-        log.Printf("Message failed after retries: %s - %v", msg.Topic(), err)
-    }),
+    scela.WithDeadLetterHandler(scela.HandlerFunc(
+        func(ctx context.Context, msg scela.Message) error {
+            log.Printf("Message failed after retries: %s", msg.Topic())
+            return nil
+        },
+    )),
 )
+```
+
+### Observability
+
+```go
+type MetricsObserver struct {
+    published int64
+}
+
+func (m *MetricsObserver) OnPublish(ctx context.Context, topic string, msg scela.Message) {
+    atomic.AddInt64(&m.published, 1)
+}
+
+// Implement other Observer methods...
+
+bus := scela.New(scela.WithObserver(&MetricsObserver{}))
 ```
 
 ## Celtic Name
@@ -143,10 +155,11 @@ Each component works standalone or together as a cohesive ecosystem.
 
 ## Documentation
 
-- [API Reference](https://pkg.go.dev/github.com/toutaio/toutago-scela-bus)
-- [Examples](./examples)
-- [Architecture Documentation](./docs/architecture.md)
-- [Contributing Guidelines](./CONTRIBUTING.md)
+- [Usage Guide](./docs/usage.md) - Complete guide with examples and best practices
+- [Architecture](./docs/architecture.md) - Design decisions and internals
+- [Migration Guide](./docs/migration.md) - Migrate from internal message bus
+- [API Reference](https://pkg.go.dev/github.com/toutaio/toutago-scela-bus) - Full API documentation
+- [Examples](./examples) - Working code examples
 
 ## Performance
 
@@ -158,7 +171,11 @@ BenchmarkPublishAsync-8    2000000     800 ns/op    200 B/op    3 allocs/op
 BenchmarkPatternMatch-8   10000000     150 ns/op      0 B/op    0 allocs/op
 ```
 
-See [benchmarks](./benchmarks) for detailed performance metrics.
+- **Async publish**: ~800 nanoseconds per operation
+- **Sync publish**: ~2.5 microseconds per operation
+- **Pattern matching**: ~150 nanoseconds per match
+
+Run benchmarks: `go test -bench=. ./pkg/scela`
 
 ## Contributing
 
