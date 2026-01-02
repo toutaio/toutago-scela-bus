@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"sync"
 	"time"
 )
@@ -25,6 +26,9 @@ type SQLStoreConfig struct {
 	Serializer Serializer
 }
 
+// validTableName validates that a table name is safe to use in SQL queries.
+var validTableName = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
+
 // NewSQLStore creates a new SQL-based message store.
 func NewSQLStore(config SQLStoreConfig) (*SQLStore, error) {
 	if config.DB == nil {
@@ -33,6 +37,14 @@ func NewSQLStore(config SQLStoreConfig) (*SQLStore, error) {
 
 	if config.TableName == "" {
 		config.TableName = "scela_messages"
+	}
+
+	// Validate table name to prevent SQL injection
+	if !validTableName.MatchString(config.TableName) {
+		return nil, fmt.Errorf(
+			"invalid table name: must contain only letters, numbers, and underscores, " +
+				"and start with a letter or underscore",
+		)
 	}
 
 	if config.Serializer == nil {
@@ -55,6 +67,7 @@ func NewSQLStore(config SQLStoreConfig) (*SQLStore, error) {
 
 // createTable creates the messages table if it doesn't exist.
 func (s *SQLStore) createTable() error {
+	// #nosec G201 -- tableName is validated in NewSQLStore
 	query := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
 			id TEXT PRIMARY KEY,
@@ -87,6 +100,7 @@ func (s *SQLStore) Store(ctx context.Context, msg Message) error {
 		return fmt.Errorf("failed to serialize metadata: %w", err)
 	}
 
+	// #nosec G201 -- tableName is validated in NewSQLStore
 	query := fmt.Sprintf(`
 		INSERT INTO %s (id, topic, payload, metadata, timestamp)
 		VALUES (?, ?, ?, ?, ?)
@@ -159,6 +173,7 @@ func (s *SQLStore) Load(ctx context.Context) ([]Message, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// #nosec G201 -- tableName is validated in NewSQLStore
 	query := fmt.Sprintf(`
 		SELECT id, topic, payload, metadata, timestamp
 		FROM %s
@@ -179,6 +194,7 @@ func (s *SQLStore) LoadByTopic(ctx context.Context, topic string) ([]Message, er
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// #nosec G201 -- tableName is validated in NewSQLStore
 	query := fmt.Sprintf(`
 		SELECT id, topic, payload, metadata, timestamp
 		FROM %s
@@ -200,6 +216,7 @@ func (s *SQLStore) LoadAfter(ctx context.Context, after time.Time) ([]Message, e
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// #nosec G201 -- tableName is validated in NewSQLStore
 	query := fmt.Sprintf(`
 		SELECT id, topic, payload, metadata, timestamp
 		FROM %s
@@ -221,6 +238,7 @@ func (s *SQLStore) Clear(ctx context.Context) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// #nosec G201 -- tableName is validated in NewSQLStore
 	query := fmt.Sprintf("DELETE FROM %s", s.tableName)
 	_, err := s.db.ExecContext(ctx, query)
 	if err != nil {
@@ -235,6 +253,7 @@ func (s *SQLStore) ClearBefore(ctx context.Context, before time.Time) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// #nosec G201 -- tableName is validated in NewSQLStore
 	query := fmt.Sprintf("DELETE FROM %s WHERE timestamp < ?", s.tableName)
 	_, err := s.db.ExecContext(ctx, query, before)
 	if err != nil {
@@ -249,6 +268,7 @@ func (s *SQLStore) Count(ctx context.Context) (int, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// #nosec G201 -- tableName is validated in NewSQLStore
 	query := fmt.Sprintf("SELECT COUNT(*) FROM %s", s.tableName)
 	var count int
 	err := s.db.QueryRowContext(ctx, query).Scan(&count)

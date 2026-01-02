@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const testValue = "value1"
+
 func TestNewMessage(t *testing.T) {
 	topic := "test.topic"
 	payload := "test payload"
@@ -49,7 +51,7 @@ func TestMessage_Metadata(t *testing.T) {
 	msg := NewMessage("test", nil)
 
 	metadata := msg.Metadata()
-	metadata["key1"] = "value1"
+	metadata["key1"] = testValue
 	metadata["key2"] = 42
 
 	// Verify metadata persists
@@ -57,7 +59,7 @@ func TestMessage_Metadata(t *testing.T) {
 		t.Errorf("Metadata() length = %d, want 2", len(msg.Metadata()))
 	}
 
-	if msg.Metadata()["key1"] != "value1" {
+	if msg.Metadata()["key1"] != testValue {
 		t.Errorf("Metadata()[key1] = %v, want value1", msg.Metadata()["key1"])
 	}
 }

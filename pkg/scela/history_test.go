@@ -6,11 +6,13 @@ import (
 	"time"
 )
 
+const testTopic = "test.topic"
+
 func TestMessageHistory(t *testing.T) {
 	history := NewMessageHistory(100)
 
-	msg1 := NewMessage("test.topic", "payload1")
-	msg2 := NewMessage("test.topic", "payload2")
+	msg1 := NewMessage(testTopic, "payload1")
+	msg2 := NewMessage(testTopic, "payload2")
 	msg3 := NewMessage("other.topic", "payload3")
 
 	// Record some entries
@@ -54,7 +56,7 @@ func TestMessageHistory(t *testing.T) {
 	}
 
 	// Test GetByTopic
-	testTopicEntries := history.GetByTopic("test.topic")
+	testTopicEntries := history.GetByTopic(testTopic)
 	if len(testTopicEntries) != 3 {
 		t.Errorf("Expected 3 entries for test.topic, got %d", len(testTopicEntries))
 	}
@@ -89,7 +91,7 @@ func TestMessageHistoryMaxSize(t *testing.T) {
 	history := NewMessageHistory(3)
 
 	for i := 0; i < 5; i++ {
-		msg := NewMessage("test.topic", i)
+		msg := NewMessage(testTopic, i)
 		history.Record(HistoryEntry{
 			Message: msg,
 			Event:   "published",
@@ -115,9 +117,9 @@ func TestMessageHistoryTimeRange(t *testing.T) {
 	past := now.Add(-1 * time.Hour)
 	future := now.Add(1 * time.Hour)
 
-	msg1 := NewMessage("test.topic", "old")
-	msg2 := NewMessage("test.topic", "recent")
-	msg3 := NewMessage("test.topic", "later")
+	msg1 := NewMessage(testTopic, "old")
+	msg2 := NewMessage(testTopic, "recent")
+	msg3 := NewMessage(testTopic, "later")
 
 	history.Record(HistoryEntry{
 		Message:   msg1,
@@ -162,7 +164,7 @@ func TestHistoryMiddleware(t *testing.T) {
 
 	wrappedHandler := middleware(handler)
 
-	msg := NewMessage("test.topic", "data")
+	msg := NewMessage(testTopic, "data")
 	err := wrappedHandler.Handle(context.Background(), msg)
 
 	if err != nil {
@@ -190,7 +192,7 @@ func TestHistoryMiddlewareWithError(t *testing.T) {
 
 	wrappedHandler := middleware(handler)
 
-	msg := NewMessage("test.topic", "data")
+	msg := NewMessage(testTopic, "data")
 	err := wrappedHandler.Handle(context.Background(), msg)
 
 	if err != context.Canceled {
@@ -219,13 +221,13 @@ func TestAuditableBus(t *testing.T) {
 	auditBus := NewAuditableBus(bus, history)
 
 	received := make(chan Message, 1)
-	auditBus.Subscribe("test.topic", HandlerFunc(func(ctx context.Context, msg Message) error {
+	auditBus.Subscribe(testTopic, HandlerFunc(func(ctx context.Context, msg Message) error {
 		received <- msg
 		return nil
 	}))
 
 	// Publish a message
-	err := auditBus.Publish(context.Background(), "test.topic", "test data")
+	err := auditBus.Publish(context.Background(), testTopic, "test data")
 	if err != nil {
 		t.Fatalf("Failed to publish: %v", err)
 	}
@@ -243,8 +245,8 @@ func TestAuditableBus(t *testing.T) {
 		t.Errorf("Expected 1 published entry, got %d", len(published))
 	}
 
-	if published[0].Message.Topic() != "test.topic" {
-		t.Errorf("Expected topic 'test.topic', got '%s'", published[0].Message.Topic())
+	if published[0].Message.Topic() != testTopic {
+		t.Errorf("Expected topic '%s', got '%s'", testTopic, published[0].Message.Topic())
 	}
 }
 
@@ -257,7 +259,7 @@ func TestAuditableBusPublishError(t *testing.T) {
 	auditBus := NewAuditableBus(bus, history)
 
 	// Try to publish to closed bus
-	err := auditBus.Publish(context.Background(), "test.topic", "test data")
+	err := auditBus.Publish(context.Background(), testTopic, "test data")
 	if err == nil {
 		t.Error("Expected error publishing to closed bus")
 	}

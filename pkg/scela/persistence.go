@@ -195,7 +195,7 @@ func (s *FileStore) saveToFile(messages []Message) error {
 		return err
 	}
 
-	return os.WriteFile(s.filepath, data, 0644)
+	return os.WriteFile(s.filepath, data, 0600)
 }
 
 // PersistentBus wraps a bus with message persistence.
