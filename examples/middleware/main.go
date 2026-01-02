@@ -70,7 +70,7 @@ func main() {
 	ctx := context.Background()
 
 	// Publish messages
-	fmt.Println("=== Publishing messages with middleware ===\n")
+	fmt.Printf("=== Publishing messages with middleware ===\n")
 
 	if err := bus.PublishSync(ctx, "order.created", map[string]interface{}{
 		"order_id": "ORD-001",

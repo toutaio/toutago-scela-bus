@@ -77,7 +77,7 @@ log.Fatal(err)
 
 ctx := context.Background()
 
-fmt.Println("=== Publishing messages ===\n")
+fmt.Printf("=== Publishing messages ===\n")
 
 // Publish messages
 topics := []string{

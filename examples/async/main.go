@@ -57,7 +57,7 @@ func main() {
 
 	ctx := context.Background()
 
-	fmt.Println("=== Publishing messages asynchronously ===\n")
+	fmt.Printf("=== Publishing messages asynchronously ===\n")
 
 	// Publish many messages asynchronously
 	start := time.Now()

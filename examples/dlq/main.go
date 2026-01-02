@@ -54,7 +54,7 @@ func main() {
 
 	ctx := context.Background()
 
-	fmt.Println("=== Testing Retry Logic ===\n")
+	fmt.Printf("=== Testing Retry Logic ===\n")
 
 	// This will succeed after 3 attempts
 	if err := bus.Publish(ctx, "payment.process", map[string]interface{}{
