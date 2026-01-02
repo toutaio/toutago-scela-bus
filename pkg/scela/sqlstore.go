@@ -169,7 +169,7 @@ func (s *SQLStore) Load(ctx context.Context) ([]Message, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to query messages: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	return s.scanMessages(rows)
 }
@@ -190,7 +190,7 @@ func (s *SQLStore) LoadByTopic(ctx context.Context, topic string) ([]Message, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to query messages: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	return s.scanMessages(rows)
 }
@@ -211,7 +211,7 @@ func (s *SQLStore) LoadAfter(ctx context.Context, after time.Time) ([]Message, e
 	if err != nil {
 		return nil, fmt.Errorf("failed to query messages: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	return s.scanMessages(rows)
 }

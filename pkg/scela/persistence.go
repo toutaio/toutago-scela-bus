@@ -146,7 +146,7 @@ func (s *FileStore) loadFromFile() ([]Message, error) {
 		}
 		return nil, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	data, err := io.ReadAll(file)
 	if err != nil {
@@ -202,7 +202,6 @@ func (s *FileStore) saveToFile(messages []Message) error {
 type PersistentBus struct {
 	Bus
 	store MessageStore
-	mu    sync.Mutex
 }
 
 // NewPersistentBus creates a new persistent bus.

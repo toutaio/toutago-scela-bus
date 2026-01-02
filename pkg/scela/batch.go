@@ -113,7 +113,7 @@ func (bp *BatchPublisher) Publish(ctx context.Context, topic string, payload int
 	bp.batch.Add(msg)
 
 	if bp.batch.Size() >= bp.maxSize {
-		bp.flush(ctx)
+		_ = bp.flush(ctx)
 	}
 
 	return nil
@@ -166,7 +166,7 @@ func (bp *BatchPublisher) processTimer() {
 		select {
 		case <-bp.timer.C:
 			ctx := context.Background()
-			bp.Flush(ctx)
+			_ = bp.Flush(ctx)
 			bp.timer.Reset(bp.maxWait)
 		case <-bp.done:
 			return
