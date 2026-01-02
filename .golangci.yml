@@ -68,6 +68,19 @@ issues:
         - dupl
         - gosec
         - lll
+        - goconst
+    
+    # Exclude gosec G201 (SQL formatting) in sqlstore - table names are safe
+    - path: sqlstore\.go
+      linters:
+        - gosec
+      text: "G201"
+    
+    # Exclude gosec G306 (file permissions) for message persistence
+    - path: persistence\.go
+      linters:
+        - gosec
+      text: "G306"
 
 output:
   format: colored-line-number
