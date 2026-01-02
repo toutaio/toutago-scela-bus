@@ -205,8 +205,11 @@ Each component works standalone or together as a cohesive ecosystem.
 
 - [Usage Guide](./docs/usage.md) - Complete guide with examples and best practices
 - [Architecture](./docs/architecture.md) - Design decisions and internals
+- [API Reference](./docs/api-reference.md) - Comprehensive API documentation
+- [Best Practices](./docs/best-practices.md) - Patterns, guidelines, and common pitfalls
+- [Benchmarks](./docs/benchmarks.md) - Performance metrics and optimization tips
 - [Migration Guide](./docs/migration.md) - Migrate from internal message bus
-- [API Reference](https://pkg.go.dev/github.com/toutaio/toutago-scela-bus) - Full API documentation
+- [GoDoc](https://pkg.go.dev/github.com/toutaio/toutago-scela-bus) - Full API documentation
 - [Examples](./examples) - Working code examples
 
 ## Performance
