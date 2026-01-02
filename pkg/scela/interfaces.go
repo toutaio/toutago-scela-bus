@@ -44,6 +44,9 @@ type Bus interface {
 
 	// PublishSync publishes a message synchronously, waiting for all handlers.
 	PublishSync(ctx context.Context, topic string, payload interface{}) error
+	
+	// PublishWithPriority publishes a message asynchronously with the specified priority.
+	PublishWithPriority(ctx context.Context, topic string, payload interface{}, priority Priority) error
 
 	// Subscribe subscribes a handler to a topic pattern.
 	Subscribe(pattern string, handler Handler) (Subscription, error)

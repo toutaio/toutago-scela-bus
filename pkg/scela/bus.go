@@ -205,6 +205,33 @@ func (b *bus) PublishSync(ctx context.Context, topic string, payload interface{}
 	return err
 }
 
+// PublishWithPriority publishes a message asynchronously with the specified priority.
+func (b *bus) PublishWithPriority(ctx context.Context, topic string, payload interface{}, priority Priority) error {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
+	if b.closed {
+		return fmt.Errorf("bus is closed")
+	}
+
+	msg := NewMessage(topic, payload)
+	
+	// Notify observers
+	b.observers.NotifyPublish(ctx, topic, msg)
+	
+	env := &envelope{
+		msg:      msg,
+		priority: priority,
+	}
+
+	select {
+	case b.queue <- env:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
 // Subscribe subscribes a handler to a topic pattern.
 func (b *bus) Subscribe(pattern string, handler Handler) (Subscription, error) {
 	b.mu.RLock()
