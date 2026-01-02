@@ -61,17 +61,15 @@ func main() {
 	time.Sleep(100 * time.Millisecond)
 
 	// Check how many messages are stored
-	if sqlStore, ok := store.(*scela.SQLStore); ok {
-		count, err := sqlStore.Count(ctx)
-		if err == nil {
-			fmt.Printf("\nMessages in database: %d\n", count)
-		}
+	count, err := store.Count(ctx)
+	if err == nil {
+		fmt.Printf("\nMessages in database: %d\n", count)
+	}
 
-		// Load messages from database
-		messages, err := sqlStore.LoadByTopic(ctx, "orders.created")
-		if err == nil {
-			fmt.Printf("\nLoaded %d 'orders.created' messages from database\n", len(messages))
-		}
+	// Load messages from database
+	messages, err := store.LoadByTopic(ctx, "orders.created")
+	if err == nil {
+		fmt.Printf("\nLoaded %d 'orders.created' messages from database\n", len(messages))
 	}
 
 	fmt.Println("\n--- Simulating application restart ---")
