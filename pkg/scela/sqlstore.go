@@ -107,6 +107,53 @@ func (s *SQLStore) Store(ctx context.Context, msg Message) error {
 	return nil
 }
 
+// scanMessages is a helper function to scan and deserialize message rows.
+func (s *SQLStore) scanMessages(rows *sql.Rows) ([]Message, error) {
+	messages := make([]Message, 0)
+
+	for rows.Next() {
+		var (
+			id          string
+			topic       string
+			payloadData string
+			metadataStr string
+			timestamp   time.Time
+		)
+
+		if err := rows.Scan(&id, &topic, &payloadData, &metadataStr, &timestamp); err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		var payload interface{}
+		if err := s.serializer.Deserialize([]byte(payloadData), &payload); err != nil {
+			return nil, fmt.Errorf("failed to deserialize payload: %w", err)
+		}
+
+		var metadata map[string]interface{}
+		if metadataStr != "" {
+			if err := json.Unmarshal([]byte(metadataStr), &metadata); err != nil {
+				return nil, fmt.Errorf("failed to deserialize metadata: %w", err)
+			}
+		}
+
+		msg := &message{
+			id:        id,
+			topic:     topic,
+			payload:   payload,
+			metadata:  metadata,
+			timestamp: timestamp,
+		}
+
+		messages = append(messages, msg)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	return messages, nil
+}
+
 // Load implements MessageStore.
 func (s *SQLStore) Load(ctx context.Context) ([]Message, error) {
 	s.mu.Lock()
@@ -124,52 +171,7 @@ func (s *SQLStore) Load(ctx context.Context) ([]Message, error) {
 	}
 	defer rows.Close()
 
-	messages := make([]Message, 0)
-
-	for rows.Next() {
-		var (
-			id          string
-			topic       string
-			payloadData string
-			metadataStr string
-			timestamp   time.Time
-		)
-
-		if err := rows.Scan(&id, &topic, &payloadData, &metadataStr, &timestamp); err != nil {
-			return nil, fmt.Errorf("failed to scan row: %w", err)
-		}
-
-		// Deserialize payload
-		var payload interface{}
-		if err := s.serializer.Deserialize([]byte(payloadData), &payload); err != nil {
-			return nil, fmt.Errorf("failed to deserialize payload: %w", err)
-		}
-
-		// Deserialize metadata
-		var metadata map[string]interface{}
-		if metadataStr != "" {
-			if err := json.Unmarshal([]byte(metadataStr), &metadata); err != nil {
-				return nil, fmt.Errorf("failed to deserialize metadata: %w", err)
-			}
-		}
-
-		// Create message
-		msg := &message{
-			id:        id,
-			topic:     topic,
-			payload:   payload,
-			metadata:  metadata,
-			timestamp: timestamp,
-		}
-
-		messages = append(messages, msg)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating rows: %w", err)
-	}
-
-	return messages, nil
+	return s.scanMessages(rows)
 }
 
 // LoadByTopic loads messages for a specific topic.
@@ -190,49 +192,7 @@ func (s *SQLStore) LoadByTopic(ctx context.Context, topic string) ([]Message, er
 	}
 	defer rows.Close()
 
-	messages := make([]Message, 0)
-
-	for rows.Next() {
-		var (
-			id          string
-			topic       string
-			payloadData string
-			metadataStr string
-			timestamp   time.Time
-		)
-
-		if err := rows.Scan(&id, &topic, &payloadData, &metadataStr, &timestamp); err != nil {
-			return nil, fmt.Errorf("failed to scan row: %w", err)
-		}
-
-		var payload interface{}
-		if err := s.serializer.Deserialize([]byte(payloadData), &payload); err != nil {
-			return nil, fmt.Errorf("failed to deserialize payload: %w", err)
-		}
-
-		var metadata map[string]interface{}
-		if metadataStr != "" {
-			if err := json.Unmarshal([]byte(metadataStr), &metadata); err != nil {
-				return nil, fmt.Errorf("failed to deserialize metadata: %w", err)
-			}
-		}
-
-		msg := &message{
-			id:        id,
-			topic:     topic,
-			payload:   payload,
-			metadata:  metadata,
-			timestamp: timestamp,
-		}
-
-		messages = append(messages, msg)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating rows: %w", err)
-	}
-
-	return messages, nil
+	return s.scanMessages(rows)
 }
 
 // LoadAfter loads messages after a specific timestamp.
@@ -253,49 +213,7 @@ func (s *SQLStore) LoadAfter(ctx context.Context, after time.Time) ([]Message, e
 	}
 	defer rows.Close()
 
-	messages := make([]Message, 0)
-
-	for rows.Next() {
-		var (
-			id          string
-			topic       string
-			payloadData string
-			metadataStr string
-			timestamp   time.Time
-		)
-
-		if err := rows.Scan(&id, &topic, &payloadData, &metadataStr, &timestamp); err != nil {
-			return nil, fmt.Errorf("failed to scan row: %w", err)
-		}
-
-		var payload interface{}
-		if err := s.serializer.Deserialize([]byte(payloadData), &payload); err != nil {
-			return nil, fmt.Errorf("failed to deserialize payload: %w", err)
-		}
-
-		var metadata map[string]interface{}
-		if metadataStr != "" {
-			if err := json.Unmarshal([]byte(metadataStr), &metadata); err != nil {
-				return nil, fmt.Errorf("failed to deserialize metadata: %w", err)
-			}
-		}
-
-		msg := &message{
-			id:        id,
-			topic:     topic,
-			payload:   payload,
-			metadata:  metadata,
-			timestamp: timestamp,
-		}
-
-		messages = append(messages, msg)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating rows: %w", err)
-	}
-
-	return messages, nil
+	return s.scanMessages(rows)
 }
 
 // Clear implements MessageStore.
