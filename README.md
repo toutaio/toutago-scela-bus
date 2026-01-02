@@ -18,8 +18,10 @@
 - 🧵 **Thread-Safe** - Fully concurrent, safe for goroutines
 - 🎛️ **Context Support** - Cancellation, timeouts, request-scoped data
 - 📊 **Observable** - Hooks for metrics and monitoring
-- 🚀 **Zero Dependencies** - Only standard library
-- ✅ **Production Ready** - 92.8% test coverage, comprehensive CI/CD
+- 💾 **Persistence** - File-based and SQL database message persistence
+- 📜 **Audit Trail** - Complete message history and event tracking
+- 🚀 **Zero Dependencies** - Only standard library (persistence features optional)
+- ✅ **Production Ready** - 87.5% test coverage, comprehensive CI/CD
 
 ## Installation
 
@@ -118,6 +120,52 @@ bus := scela.New(
         },
     )),
 )
+```
+
+### Message Persistence
+
+```go
+// Use file-based persistence
+fileStore := scela.NewFileStore("messages.json")
+persistentBus := scela.NewPersistentBus(bus, fileStore)
+defer persistentBus.Close()
+
+// Or use database persistence (SQLite, PostgreSQL, MySQL, etc.)
+db, _ := sql.Open("sqlite3", "messages.db")
+sqlStore, _ := scela.NewSQLStore(scela.SQLStoreConfig{
+    DB:        db,
+    TableName: "messages",
+})
+persistentBus = scela.NewPersistentBus(bus, sqlStore)
+
+// Messages are automatically persisted
+persistentBus.Publish(ctx, "orders.created", order)
+
+// Replay persisted messages (e.g., after restart)
+persistentBus.Replay(ctx)
+
+// Query specific messages
+messages, _ := sqlStore.LoadByTopic(ctx, "orders.created")
+recent, _ := sqlStore.LoadAfter(ctx, time.Now().Add(-1*time.Hour))
+```
+
+### Audit Trail
+
+```go
+// Create audit history
+history := scela.NewMessageHistory(1000)
+auditBus := scela.NewAuditableBus(bus, history)
+
+// Use history middleware for detailed tracking
+auditBus.Subscribe("*", scela.HistoryMiddleware(history)(handler))
+
+// Query audit trail
+published := history.GetByEvent("published")
+failed := history.GetByEvent("failed")
+orderEvents := history.GetByTopic("orders.created")
+recent := history.GetInTimeRange(yesterday, now)
+
+fmt.Printf("Total events tracked: %d\n", history.Count())
 ```
 
 ### Observability
