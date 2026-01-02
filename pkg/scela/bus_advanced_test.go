@@ -18,7 +18,7 @@ func TestBus_ContextCancellation(t *testing.T) {
 		bus.Publish(ctx, "filler", nil)
 	}
 
-	// Now try with cancelled context
+	// Now try with canceled context
 	cancelCtx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
 

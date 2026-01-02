@@ -8,15 +8,15 @@ import (
 
 // bus is the default implementation of the Bus interface.
 type bus struct {
-	registry      *subscriptionRegistry
-	middleware    []Middleware
-	workers       int
-	queue         chan *envelope
-	wg            sync.WaitGroup
-	mu            sync.RWMutex
-	closed        bool
-	maxRetries    int
-	dlqHandler    Handler
+	registry   *subscriptionRegistry
+	middleware []Middleware
+	workers    int
+	queue      chan *envelope
+	wg         sync.WaitGroup
+	mu         sync.RWMutex
+	closed     bool
+	maxRetries int
+	dlqHandler Handler
 }
 
 // envelope wraps a message for internal processing.
@@ -59,7 +59,7 @@ func New(opts ...Option) Bus {
 	b := &bus{
 		registry:   newSubscriptionRegistry(),
 		middleware: make([]Middleware, 0),
-		workers:    10, // Default number of workers
+		workers:    10,                         // Default number of workers
 		queue:      make(chan *envelope, 1000), // Buffered channel
 		maxRetries: 3,
 	}
@@ -110,12 +110,12 @@ func (b *bus) processMessage(env *envelope) {
 
 	// Handle the message
 	if err := finalHandler.Handle(ctx, env.msg); err != nil {
-		b.handleError(env, err)
+		b.handleError(env)
 	}
 }
 
 // handleError handles a message processing error with retry logic.
-func (b *bus) handleError(env *envelope, err error) {
+func (b *bus) handleError(env *envelope) {
 	env.retries++
 
 	if env.retries < b.maxRetries {
