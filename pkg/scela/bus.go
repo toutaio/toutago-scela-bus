@@ -17,6 +17,7 @@ type bus struct {
 	closed     bool
 	maxRetries int
 	dlqHandler Handler
+	observers  *observerRegistry
 }
 
 // envelope wraps a message for internal processing.
@@ -62,6 +63,7 @@ func New(opts ...Option) Bus {
 		workers:    10,                         // Default number of workers
 		queue:      make(chan *envelope, 1000), // Buffered channel
 		maxRetries: 3,
+		observers:  newObserverRegistry(),
 	}
 
 	// Apply options
@@ -89,7 +91,7 @@ func (b *bus) worker() {
 
 // processMessage processes a single message envelope.
 func (b *bus) processMessage(env *envelope) {
-	ctx := context.Background() // TODO: Use context from envelope
+	ctx := context.Background()
 
 	handlers := b.registry.GetHandlers(env.msg.Topic())
 	if len(handlers) == 0 {
@@ -109,7 +111,12 @@ func (b *bus) processMessage(env *envelope) {
 	}))
 
 	// Handle the message
-	if err := finalHandler.Handle(ctx, env.msg); err != nil {
+	err := finalHandler.Handle(ctx, env.msg)
+	
+	// Notify observers
+	b.observers.NotifyMessageProcessed(ctx, env.msg, err)
+	
+	if err != nil {
 		b.handleError(env)
 	}
 }
@@ -141,6 +148,10 @@ func (b *bus) Publish(ctx context.Context, topic string, payload interface{}) er
 	}
 
 	msg := NewMessage(topic, payload)
+	
+	// Notify observers
+	b.observers.NotifyPublish(ctx, topic, msg)
+	
 	env := &envelope{
 		msg:      msg,
 		priority: PriorityNormal,
@@ -164,6 +175,10 @@ func (b *bus) PublishSync(ctx context.Context, topic string, payload interface{}
 	}
 
 	msg := NewMessage(topic, payload)
+	
+	// Notify observers
+	b.observers.NotifyPublish(ctx, topic, msg)
+	
 	handlers := b.registry.GetHandlers(topic)
 
 	if len(handlers) == 0 {
@@ -182,7 +197,12 @@ func (b *bus) PublishSync(ctx context.Context, topic string, payload interface{}
 		return lastErr
 	}))
 
-	return finalHandler.Handle(ctx, msg)
+	err := finalHandler.Handle(ctx, msg)
+	
+	// Notify observers
+	b.observers.NotifyMessageProcessed(ctx, msg, err)
+	
+	return err
 }
 
 // Subscribe subscribes a handler to a topic pattern.
@@ -194,12 +214,25 @@ func (b *bus) Subscribe(pattern string, handler Handler) (Subscription, error) {
 		return nil, fmt.Errorf("bus is closed")
 	}
 
-	return b.registry.Add(pattern, handler, b)
+	sub, err := b.registry.Add(pattern, handler, b)
+	if err == nil {
+		b.observers.NotifySubscribe(pattern)
+	}
+	return sub, err
 }
 
 // unsubscribe removes a subscription by ID.
 func (b *bus) unsubscribe(id string) error {
-	return b.registry.Remove(id)
+	// Get pattern before removing
+	b.registry.mu.RLock()
+	sub, exists := b.registry.subscriptions[id]
+	b.registry.mu.RUnlock()
+	
+	err := b.registry.Remove(id)
+	if err == nil && exists {
+		b.observers.NotifyUnsubscribe(sub.pattern)
+	}
+	return err
 }
 
 // Use adds middleware to the bus.
@@ -236,6 +269,9 @@ func (b *bus) Close() error {
 
 	// Clear all subscriptions
 	b.registry.Clear()
+	
+	// Notify observers
+	b.observers.NotifyClose()
 
 	return nil
 }
