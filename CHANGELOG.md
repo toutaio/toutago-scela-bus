@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-01-02
+
+### Added
+- Message filtering capabilities via FilterMiddleware
+- TopicFilter, PayloadFilter, and MetadataFilter
+- Filter combinators: AndFilter, OrFilter, NotFilter
+- BatchPublisher for collecting and publishing messages in batches
+- Configurable batch size and wait time
+- Batch callback hooks for monitoring
+- 10 new test cases for filtering and batching
+
+### Changed
+- Increased test coverage from 93.2% to 94.5%
+
 ## [1.1.0] - 2026-01-02
 
 ### Added
@@ -51,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code of Conduct
 - Contributing guidelines
 
+[1.2.0]: https://github.com/toutaio/toutago-scela-bus/releases/tag/v1.2.0
 [1.1.0]: https://github.com/toutaio/toutago-scela-bus/releases/tag/v1.1.0
 [1.0.0]: https://github.com/toutaio/toutago-scela-bus/releases/tag/v1.0.0
 [0.1.0]: https://github.com/toutaio/toutago-scela-bus/releases/tag/v0.1.0
