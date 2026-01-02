@@ -7,6 +7,12 @@
 
 **Scéla** (Old Irish: "news, tidings, messages") is a production-ready, in-process message bus for Go applications. Part of the [Toutā Framework](https://github.com/toutaio/toutago), Scéla provides pub/sub messaging with both synchronous and asynchronous delivery, pattern matching, middleware support, and more.
 
+## Status
+
+✅ **Production Ready** - Stable v1.5+ releases  
+📦 [View Releases](https://github.com/toutaio/toutago-scela-bus/releases) for the latest version  
+📖 [Changelog](CHANGELOG.md) - Full version history
+
 ## Features
 
 - 🔌 **Pub/Sub Pattern** - Topic-based message routing with multiple subscribers

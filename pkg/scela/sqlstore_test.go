@@ -150,11 +150,11 @@ func TestSQLStoreLoadAfter(t *testing.T) {
 	// Store messages
 	msg1 := NewMessage("test.topic", "old")
 	store.Store(ctx, msg1)
-	
+
 	time.Sleep(100 * time.Millisecond)
 	marker := time.Now()
 	time.Sleep(100 * time.Millisecond)
-	
+
 	msg2 := NewMessage("test.topic", "recent")
 	store.Store(ctx, msg2)
 

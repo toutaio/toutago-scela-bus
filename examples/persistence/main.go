@@ -7,8 +7,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/toutaio/toutago-scela-bus/pkg/scela"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/toutaio/toutago-scela-bus/pkg/scela"
 )
 
 func main() {

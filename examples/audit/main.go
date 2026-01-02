@@ -46,16 +46,16 @@ func main() {
 
 	// Query audit trail
 	fmt.Println("\n=== Audit Trail ===")
-	
+
 	fmt.Printf("\nTotal events: %d\n", history.Count())
 
 	// Get published events
 	published := history.GetByEvent("published")
 	fmt.Printf("\nPublished messages: %d\n", len(published))
 	for _, entry := range published {
-		fmt.Printf("  - %s [%s] at %s\n", 
-			entry.Message.Topic(), 
-			entry.Message.ID()[:8], 
+		fmt.Printf("  - %s [%s] at %s\n",
+			entry.Message.Topic(),
+			entry.Message.ID()[:8],
 			entry.Timestamp.Format("15:04:05"))
 	}
 

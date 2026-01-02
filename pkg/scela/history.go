@@ -15,12 +15,12 @@ type MessageHistory struct {
 
 // HistoryEntry represents a single entry in the message history.
 type HistoryEntry struct {
-	Message     Message
-	Event       string // "published", "delivered", "failed", "retried"
-	Timestamp   time.Time
-	Metadata    map[string]interface{}
+	Message      Message
+	Event        string // "published", "delivered", "failed", "retried"
+	Timestamp    time.Time
+	Metadata     map[string]interface{}
 	SubscriberID string
-	Error       string
+	Error        string
 }
 
 // NewMessageHistory creates a new message history tracker.

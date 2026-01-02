@@ -67,7 +67,7 @@ func main() {
 	// Wait for retries
 	time.Sleep(500 * time.Millisecond)
 
-	fmt.Println("\n=== Testing Dead Letter Queue ===\n")
+	fmt.Println("\n=== Testing Dead Letter Queue ===")
 
 	// Reset attempt counter
 	attemptCount = 0

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-01-02
+
+### Changed
+- Enhanced doc.go with comprehensive package documentation following Toutā standards
+- Added detailed examples for persistence, audit trail, and observability in doc.go
+- Improved README with Status section for consistency with other Toutā subprojects
+- Standardized documentation format across package documentation
+
+### Documentation
+- Aligned package documentation style with toutago-cosan-router and toutago-nasc-dependency-injector
+- Added version information to doc.go
+- Enhanced code examples in package-level documentation
+
 ## [1.5.0] - 2026-01-02
 
 ### Added

@@ -112,10 +112,10 @@ func (b *bus) processMessage(env *envelope) {
 
 	// Handle the message
 	err := finalHandler.Handle(ctx, env.msg)
-	
+
 	// Notify observers
 	b.observers.NotifyMessageProcessed(ctx, env.msg, err)
-	
+
 	if err != nil {
 		b.handleError(env)
 	}
@@ -148,10 +148,10 @@ func (b *bus) Publish(ctx context.Context, topic string, payload interface{}) er
 	}
 
 	msg := NewMessage(topic, payload)
-	
+
 	// Notify observers
 	b.observers.NotifyPublish(ctx, topic, msg)
-	
+
 	env := &envelope{
 		msg:      msg,
 		priority: PriorityNormal,
@@ -175,10 +175,10 @@ func (b *bus) PublishSync(ctx context.Context, topic string, payload interface{}
 	}
 
 	msg := NewMessage(topic, payload)
-	
+
 	// Notify observers
 	b.observers.NotifyPublish(ctx, topic, msg)
-	
+
 	handlers := b.registry.GetHandlers(topic)
 
 	if len(handlers) == 0 {
@@ -198,10 +198,10 @@ func (b *bus) PublishSync(ctx context.Context, topic string, payload interface{}
 	}))
 
 	err := finalHandler.Handle(ctx, msg)
-	
+
 	// Notify observers
 	b.observers.NotifyMessageProcessed(ctx, msg, err)
-	
+
 	return err
 }
 
@@ -214,11 +214,16 @@ func (b *bus) PublishWithPriority(ctx context.Context, topic string, payload int
 		return fmt.Errorf("bus is closed")
 	}
 
+	// Check context before proceeding
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	msg := NewMessage(topic, payload)
-	
+
 	// Notify observers
 	b.observers.NotifyPublish(ctx, topic, msg)
-	
+
 	env := &envelope{
 		msg:      msg,
 		priority: priority,
@@ -254,7 +259,7 @@ func (b *bus) unsubscribe(id string) error {
 	b.registry.mu.RLock()
 	sub, exists := b.registry.subscriptions[id]
 	b.registry.mu.RUnlock()
-	
+
 	err := b.registry.Remove(id)
 	if err == nil && exists {
 		b.observers.NotifyUnsubscribe(sub.pattern)
@@ -296,7 +301,7 @@ func (b *bus) Close() error {
 
 	// Clear all subscriptions
 	b.registry.Clear()
-	
+
 	// Notify observers
 	b.observers.NotifyClose()
 
